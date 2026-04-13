@@ -33,7 +33,33 @@ export class HashTable<T extends { passportNumber: string }> {
     return sum % this.size;
   }
 
+  private loadFactor(): number {
+    return this.count / this.size;
+  }
+
+  private resize(): void {
+    const oldTable = this.table;
+
+    this.size *= 2;
+    this.table = new Array(this.size).fill(null).map(() => ({
+      state: BucketState.EMPTY,
+      value: null
+    }));
+
+    this.count = 0;
+
+    for (const bucket of oldTable) {
+      if (bucket.state === BucketState.FILLED && bucket.value) {
+        this.insert(bucket.value);
+      }
+    }
+  }
+
   public insert(value: T): void {
+    if (this.loadFactor() >= 0.7) {
+      this.resize();
+    }
+
     let index = this.hash(value.passportNumber);
 
     for (let i = 0; i < this.size; i++) {
@@ -60,8 +86,6 @@ export class HashTable<T extends { passportNumber: string }> {
         return;
       }
     }
-
-    throw new Error("Хэш-таблица переполнена");
   }
 
   public find(passportNumber: string): T | null {
