@@ -1,7 +1,6 @@
 export type RoomType = "Л" | "П" | "О" | "М";
 
 export class Room {
-  public occupied: number = 0;
   public guests: string[] = [];
 
   constructor(
@@ -19,27 +18,31 @@ export class Room {
     const regex = /^(Л|П|О|М)\d{3}$/;
 
     if (!regex.test(number)) {
-      throw new Error("Неверный формат номера комнаты. Ожидается ANNN")
+      throw new Error("Неверный формат номера комнаты. Ожидается ANNN");
     }
+  }
+
+  public get occupied(): number {
+    return this.guests.length;
+  }
+
+  public isFull(): boolean {
+    return this.guests.length >= this.capacity;
   }
 
   public addGuest(passport: string) {
-    if (this.occupied >= this.capacity) {
+    if (this.isFull()) {
       throw new Error("Свободных мест в номере нет");
     }
 
+    if (this.guests.includes(passport)) {
+      throw new Error("Гость уже заселен в этот номер");
+    }
+
     this.guests.push(passport);
-    this.occupied++;
   }
 
   public removeGuest(passport: string) {
-    const index = this.guests.indexOf(passport);
-    
-    if (index !== -1) {
-      this.guests.splice(index, 1);
-      this.occupied--;
-    }
-
-    if (this.occupied < 0) this.occupied = 0;
+    this.guests = this.guests.filter(p => p !== passport);
   }
 }
