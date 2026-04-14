@@ -1,6 +1,6 @@
 export class Guest {
   constructor(
-    private readonly passportNumber: string,
+    public passportNumber: string,
     private readonly fullName: string,
     private readonly birthYear: number,
     private readonly address: string,

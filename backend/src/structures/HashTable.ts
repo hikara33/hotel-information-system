@@ -133,4 +133,16 @@ export class HashTable<T extends { passportNumber: string }> {
 
     return false;
   }
+
+  public values(): T[] {
+    const result: T[] = [];
+
+    for (const bucket of this.table) {
+      if (bucket.state === BucketState.FILLED && bucket.value) {
+        result.push(bucket.value);
+      }
+    }
+
+    return result;
+  }
 }
