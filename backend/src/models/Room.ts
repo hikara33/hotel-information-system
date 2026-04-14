@@ -1,12 +1,13 @@
 export type RoomType = "Л" | "П" | "О" | "М";
 
 export class Room {
+  public occupied: number = 0;
   public guests: string[] = [];
 
   constructor(
     public roomNumber: string,
     public type: RoomType,
-    public seats: number,
+    public capacity: number,
     public roomsCount: number,
     public hasBathroom: boolean,
     public equipment: string,
@@ -23,14 +24,22 @@ export class Room {
   }
 
   public addGuest(passport: string) {
-    if (this.guests.length >= this.seats) {
+    if (this.occupied >= this.capacity) {
       throw new Error("Свободных мест в номере нет");
     }
 
     this.guests.push(passport);
+    this.occupied++;
   }
 
   public removeGuest(passport: string) {
-    this.guests.filter(p => p !== passport);
+    const index = this.guests.indexOf(passport);
+    
+    if (index !== -1) {
+      this.guests.splice(index, 1);
+      this.occupied--;
+    }
+
+    if (this.occupied < 0) this.occupied = 0;
   }
 }
