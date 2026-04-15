@@ -1,0 +1,283 @@
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f2f4f8;
+  color: #1a1a1a;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.card {
+  background: white;
+  border-radius: 10px;
+  padding: 14px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.section-wide {
+  margin-bottom: 16px;
+}
+
+.hint.subtle {
+  font-size: 12px;
+  opacity: 0.9;
+}
+
+.data-table-wrap table.data {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.data-table-wrap table.data th,
+.data-table-wrap table.data td {
+  border: 1px solid #e2e8f0;
+  padding: 8px 10px;
+  text-align: left;
+}
+
+.data-table-wrap table.data th {
+  background: #f8fafc;
+  font-weight: 600;
+}
+
+.data-table-wrap table.data tr:nth-child(even) {
+  background: #fafbfc;
+}
+
+button.btn-danger {
+  background: #b91c1c;
+  padding: 6px 10px;
+  font-size: 12px;
+}
+
+button.btn-danger:hover {
+  background: #991b1b;
+}
+
+code {
+  font-size: 12px;
+  background: #f1f5f9;
+  padding: 1px 4px;
+  border-radius: 4px;
+}
+
+form {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+input, button {
+  padding: 8px;
+  border: 1px solid #c4c9d4;
+  border-radius: 8px;
+}
+
+button {
+  cursor: pointer;
+  background: #1f6feb;
+  color: white;
+  border: none;
+}
+
+button:hover {
+  background: #1257be;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+
+pre {
+  max-height: 220px;
+  overflow: auto;
+  background: #0f172a;
+  color: #e2e8f0;
+  padding: 10px;
+  border-radius: 8px;
+  font-size: 12px;
+}
+
+.note, .hint {
+  color: #4b5563;
+  font-size: 14px;
+}
+
+.hint {
+  margin-top: 0;
+}
+
+.meta {
+  font-size: 13px;
+  color: #334155;
+  margin: 0 0 8px;
+}
+
+.structures-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 10px;
+}
+
+.structure-block-wide {
+  grid-column: 1 / -1;
+}
+
+.structure-block h3 {
+  margin: 0 0 6px;
+  font-size: 16px;
+}
+
+.hash-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+  gap: 6px;
+  max-height: 280px;
+  overflow: auto;
+  padding: 4px;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.bucket {
+  border-radius: 6px;
+  padding: 6px 4px;
+  font-size: 10px;
+  line-height: 1.2;
+  text-align: center;
+  word-break: break-all;
+  border: 1px solid #cbd5e1;
+}
+
+.bucket .idx {
+  font-weight: bold;
+  opacity: 0.85;
+}
+
+.bucket.empty {
+  background: #e2e8f0;
+  color: #475569;
+}
+
+.bucket.filled {
+  background: #dcfce7;
+  border-color: #22c55e;
+  color: #14532d;
+}
+
+.bucket.deleted {
+  background: #ffedd5;
+  border-color: #fb923c;
+  color: #7c2d12;
+}
+
+.table-wrap {
+  max-height: 280px;
+  overflow: auto;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+}
+
+table.skip {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+table.skip th,
+table.skip td {
+  border: 1px solid #e2e8f0;
+  padding: 6px 8px;
+  vertical-align: top;
+}
+
+table.skip th {
+  background: #f1f5f9;
+  text-align: left;
+}
+
+.avl-wrap {
+  overflow: auto;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  padding: 8px;
+}
+
+#avlSvg {
+  display: block;
+  min-height: 80px;
+}
+
+.toast-host {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: min(420px, calc(100vw - 32px));
+  pointer-events: none;
+}
+
+.toast {
+  pointer-events: auto;
+  padding: 12px 14px;
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.2);
+  font-size: 14px;
+  line-height: 1.35;
+  animation: toast-in 0.22s ease-out;
+}
+
+.toast.error {
+  background: #fef2f2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+}
+
+.toast.success {
+  background: #ecfdf5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 900px) {
+  .grid,
+  .structures-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .structure-block-wide {
+    grid-column: 1;
+  }
+}

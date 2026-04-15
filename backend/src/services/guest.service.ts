@@ -1,10 +1,10 @@
-import { CheckIn } from "../models/CheckIn.js";
 import type { Guest } from "../models/Guest.js";
+import { containsByBoyerMoore } from "../algorithms/boyer-moore.js";
+import { radixSortStrings } from "../algorithms/distribution-sort.js";
 import { HashTable } from "../structures/HashTable.js";
 
 export class GuestService {
   private guests: HashTable<Guest>;
-  private checkIns: CheckIn[] = [];
 
   constructor() {
     this.guests = new HashTable<Guest>(50);
@@ -15,14 +15,6 @@ export class GuestService {
   }
 
   public deleteGuest(passport: string): boolean {
-    const isLiving = this.checkIns.some(
-      c => c.passportNumber === passport && c.checkOutDate === null
-    );
-    
-    if (isLiving) {
-      throw new Error("Нельзя удалить заселенного пользователя");
-    }
-
     return this.guests.delete(passport);
   }
 
@@ -31,38 +23,30 @@ export class GuestService {
   }
 
   public findByName(name: string): Guest[] {
+    if (!name.trim()) {
+      return [];
+    }
     const result: Guest[] = [];
-    //в будущем алгоритм бойер-мура
+    for (const guest of this.guests.values()) {
+      if (containsByBoyerMoore(guest.getFullName(), name)) {
+        result.push(guest);
+      }
+    }
     return result;
   }
 
-  public checkIn(passport: string, room: string, date: string): void {
-    const guest = this.guests.find(passport);
-    if (!guest) {
-      throw new Error("Гость не найден");
-    }
-
-    const isCheckedIn = this.checkIns.some(
-      c => c.passportNumber === passport && c.checkOutDate === null
-    );
-    if (isCheckedIn) throw new Error("Гость уже засилен");
-
-    const newCheckIn = new CheckIn(passport, room, date);
-    this.checkIns.push(newCheckIn);
-  }
-
-  public checkOut(passport: string, date: string): void {
-    const record = this.checkIns.find(
-      c => c.passportNumber === passport && c.checkOutDate === null
-    );
-
-    if (!record) {
-      throw new Error("Активная регистрация не найдена");
-    }
-    record.checkOut(date);
-  }
-
   public findAllGuests(): Guest[] {
-    return this.guests.values();
+    const guests = this.guests.values();
+    const sortedKeys = radixSortStrings(guests.map((g) => g.passportNumber));
+    const guestMap = new Map(guests.map((g) => [g.passportNumber, g]));
+    return sortedKeys.map((key) => guestMap.get(key)!).filter(Boolean);
+  }
+
+  public clear(): void {
+    this.guests = new HashTable<Guest>(50);
+  }
+
+  public getHashTableStructure() {
+    return this.guests.getStructureView();
   }
 }

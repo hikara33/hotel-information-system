@@ -12,7 +12,7 @@ export class Guest {
 
   private validatePasssport(passport: string) {
     const regex = /^\d{4}-\d{6}$/;
-    
+
     if (!regex.test(passport)) {
       throw new Error("Неверный формат паспорта. Ожидается NNNN-NNNNNN")
     }
@@ -24,5 +24,21 @@ export class Guest {
     if (year < 1900 || year > currentYear) {
       throw new Error("Неверный год рождения");
     }
+  }
+
+  public getFullName(): string {
+    return this.fullName;
+  }
+
+  public getBirthYear(): number {
+    return this.birthYear;
+  }
+
+  public getAddress(): string {
+    return this.address;
+  }
+
+  public getPurpose(): string {
+    return this.purpose;
   }
 }

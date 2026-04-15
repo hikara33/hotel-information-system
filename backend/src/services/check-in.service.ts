@@ -1,9 +1,11 @@
 import { CheckIn } from "../models/CheckIn.js";
+import { LayeredList } from "../structures/LayeredList.js";
+import { assertCheckOutAfterCheckIn } from "../validation.js";
 import type { GuestService } from "./guest.service.js";
 import type { RoomService } from "./room.service.js";
 
 export class CheckInService {
-  private checkIns: CheckIn[] = [];
+  private checkIns = new LayeredList<CheckIn>();
 
   constructor(
     private guestService: GuestService,
@@ -21,8 +23,8 @@ export class CheckInService {
       throw new Error("Комната не найдена");
     }
 
-    const alreadyLiving = this.checkIns.some(
-      c => c.passportNumber === passport && c.checkOutDate === null
+    const alreadyLiving = this.getActive().some(
+      (c) => c.passportNumber === passport
     );
 
     if (alreadyLiving) {
@@ -31,19 +33,19 @@ export class CheckInService {
 
     room.addGuest(passport);
 
-    this.checkIns.push(
-      new CheckIn(passport, roomNumber, date)
-    );
+    this.checkIns.insert(roomNumber, new CheckIn(passport, roomNumber, date));
   }
 
   public checkOut(passport: string, date: string): void {
-    const record = this.checkIns.find(
-      c => c.passportNumber === passport && c.checkOutDate === null
+    const record = this.getAll().find(
+      (c) => c.passportNumber === passport && c.checkOutDate === null
     );
 
     if (!record) {
       throw new Error("Активное заселение не найдено");
     }
+
+    assertCheckOutAfterCheckIn(record.checkInDate, date);
 
     const room = this.roomService.findRoom(record.roomNumber);
     if (!room) {
@@ -55,18 +57,82 @@ export class CheckInService {
   }
 
   public getAll(): CheckIn[] {
-    return this.checkIns;
+    return this.checkIns.values();
   }
 
   public getActive(): CheckIn[] {
-    return this.checkIns.filter(c => c.checkOutDate === null);
+    return this.getAll().filter((c) => c.checkOutDate === null);
   }
 
   public findByPassport(passport: string): CheckIn[] {
-    return this.checkIns.filter(c => c.passportNumber === passport);
+    return this.getAll().filter((c) => c.passportNumber === passport);
   }
 
   public findByRoom(roomNumber: string): CheckIn[] {
-    return this.checkIns.filter(c => c.roomNumber === roomNumber);
+    return this.checkIns.findByKey(roomNumber);
+  }
+
+  public hasActiveStayByPassport(passport: string): boolean {
+    return this.getActive().some((record) => record.passportNumber === passport);
+  }
+
+  public hasActiveStayByRoom(roomNumber: string): boolean {
+    return this.getActive().some((record) => record.roomNumber === roomNumber);
+  }
+
+  public clear(): void {
+    this.checkIns = new LayeredList<CheckIn>();
+  }
+
+  public deleteCheckInRecord(passport: string, roomNumber: string, checkInDate: string): boolean {
+    const atKey = this.checkIns.findByKey(roomNumber);
+    const record = atKey.find(
+      (c) =>
+        c.passportNumber === passport &&
+        c.checkInDate === checkInDate
+    );
+    if (!record) {
+      return false;
+    }
+
+    if (record.checkOutDate === null) {
+      const room = this.roomService.findRoom(roomNumber);
+      if (room) {
+        room.removeGuest(passport);
+      }
+    }
+
+    return this.checkIns.removeByPredicate(roomNumber, (c) => this.sameCheckIn(c, record));
+  }
+
+  public removeAllCheckInsForRoom(roomNumber: string): void {
+    const snapshot = [...this.checkIns.findByKey(roomNumber)];
+    for (const record of snapshot) {
+      this.checkIns.removeByPredicate(roomNumber, (c) => this.sameCheckIn(c, record));
+    }
+  }
+
+  public removeAllCheckInsForPassport(passport: string): void {
+    const snapshot = this.getAll().filter((c) => c.passportNumber === passport);
+    for (const record of snapshot) {
+      this.checkIns.removeByPredicate(record.roomNumber, (c) => this.sameCheckIn(c, record));
+    }
+  }
+
+  private sameCheckIn(a: CheckIn, b: CheckIn): boolean {
+    return (
+      a.passportNumber === b.passportNumber &&
+      a.roomNumber === b.roomNumber &&
+      a.checkInDate === b.checkInDate &&
+      a.checkOutDate === b.checkOutDate
+    );
+  }
+
+  //визуализация слоеного списка
+  public getLayeredListStructure() {
+    return this.checkIns.getStructureView((c) => {
+      const state = c.checkOutDate === null ? "активно" : `выселен ${c.checkOutDate}`;
+      return `${c.passportNumber} · ${c.roomNumber} · заселение ${c.checkInDate} · ${state}`;
+    });
   }
 }

@@ -25,6 +25,21 @@ export class RoomService {
   }
 
   public findByEquipment(fragment: string): Room[] {
+    if (!fragment.trim()) {
+      return [];
+    }
     return this.rooms.findByEquipment(fragment);
+  }
+
+  public getTreeView() {
+    return this.rooms.toLevelSnapshot();
+  }
+
+  public getAvlNestedGraph() {
+    return this.rooms.toNestedGraph();
+  }
+
+  public clear(): void {
+    this.rooms = new AVLTree<Room>();
   }
 }

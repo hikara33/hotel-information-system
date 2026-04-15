@@ -1,12 +1,127 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Hotel System</title>
+  <title>Регистрация постояльцев в гостинице</title>
+  <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
-  <h1>Hotel System</h1>
-  <script src="main.ts"></script>
+  <div id="toastHost" class="toast-host" aria-live="polite"></div>
+
+  <main class="container">
+    <h1>Информационная система гостиницы</h1>
+
+    <section class="structures card">
+      <h2>Структуры хранения</h2>
+      <!-- <p class="hint">Ячейки хеша: «дом» = индекс по хешу до пробирования; зелёный — занято, серый — пусто, оранжевый — удалено (tombstone). Слоеный список: по ключу номера комнаты, столбцы — уровни «мостов». Дерево — реальная топология AVL.</p> -->
+      <div class="structures-grid">
+        <div class="structure-block">
+          <h3>Хеш-таблица (постояльцы)</h3>
+          <p id="hashMeta" class="meta"></p>
+          <div id="hashBuckets" class="hash-grid"></div>
+        </div>
+        <div class="structure-block">
+          <h3>Слоеный список (заселения)</h3>
+          <p id="skipMeta" class="meta"></p>
+          <div id="skipTableWrap" class="table-wrap"></div>
+        </div>
+        <div class="structure-block structure-block-wide">
+          <h3>AVL-дерево (номера)</h3>
+          <div id="avlWrap" class="avl-wrap">
+            <svg id="avlSvg" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="AVL дерево"></svg>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="grid">
+      <div class="card">
+        <h2>Все постояльцы</h2>
+        
+        <div id="allGuestsTable" class="table-wrap data-table-wrap"></div>
+      </div>
+      <div class="card">
+        <h2>Все номера</h2>
+        
+        <div id="allRoomsTable" class="table-wrap data-table-wrap"></div>
+      </div>
+    </section>
+
+    <section class="card section-wide">
+      <h2>Все записи о заселении / выселении</h2>
+      <!-- <p class="hint">Хранение в слоеном списке по ключу «номер комнаты». Удаление записи — <code>LayeredList.removeByPredicate</code>; если запись активна, гость снимается с номера.</p> -->
+      <div id="allCheckInsTable" class="table-wrap data-table-wrap"></div>
+    </section>
+
+    <section class="grid">
+      <div class="card">
+        <h2>Постояльцы</h2>
+        <form id="guestForm">
+          <input name="passportNumber" placeholder="Паспорт NNNN-NNNNNN" required pattern="[0-9]{4}-[0-9]{6}" maxlength="11" title="Формат NNNN-NNNNNN">
+          <input name="fullName" placeholder="ФИО" required minlength="2" maxlength="120">
+          <input name="birthYear" type="number" placeholder="Год рождения" required min="1900" max="2100">
+          <input name="address" placeholder="Адрес" required minlength="2" maxlength="200">
+          <input name="purpose" placeholder="Цель прибытия" required minlength="2" maxlength="200">
+          <button type="submit">Добавить</button>
+        </form>
+        <div class="actions">
+          <input id="guestNameSearch" placeholder="Фрагмент ФИО (Бойер–Мур)" minlength="1" maxlength="120">
+          <button type="button" id="searchGuestBtn">Найти</button>
+        </div>
+        <p class="hint subtle">Ниже — только результат поиска по ФИО.</p>
+        <pre id="guestsOutput"></pre>
+      </div>
+
+      <div class="card">
+        <h2>Гостиничные номера</h2>
+        <form id="roomForm">
+          <input name="roomNumber" placeholder="Номер ANNN (например Л001)" required pattern="[ЛПОМ]\d{3}" maxlength="4" title="Буква Л/П/О/М и три цифры">
+          <input name="capacity" type="number" placeholder="Количество мест" required min="1" max="50">
+          <input name="roomsCount" type="number" placeholder="Количество комнат" required min="1" max="30">
+          <label><input name="hasBathroom" type="checkbox"> Санузел</label>
+          <input name="equipment" placeholder="Оборудование" required minlength="1" maxlength="400">
+          <button type="submit">Добавить</button>
+        </form>
+        <div class="actions">
+          <input id="equipmentSearch" placeholder="Фрагмент оборудования" minlength="1" maxlength="200">
+          <button type="button" id="searchRoomBtn">Найти</button>
+        </div>
+        <p class="hint subtle">Ниже — только результат поиска по оборудованию.</p>
+        <pre id="roomsOutput"></pre>
+      </div>
+    </section>
+
+    <section class="grid">
+      <div class="card">
+        <h2>Заселение / выселение</h2>
+        <form id="checkInForm">
+          <input name="passportNumber" placeholder="Паспорт" required pattern="[0-9]{4}-[0-9]{6}" maxlength="11">
+          <input name="roomNumber" placeholder="Номер комнаты" required pattern="[ЛПОМ]\d{3}" maxlength="4">
+          <input name="checkInDate" type="date" required>
+          <button type="submit">Заселить</button>
+        </form>
+        <form id="checkOutForm">
+          <input name="passportNumber" placeholder="Паспорт" required pattern="[0-9]{4}-[0-9]{6}" maxlength="11">
+          <input name="checkOutDate" type="date" required>
+          <button type="submit">Выселить</button>
+        </form>
+        <pre id="checkInsOutput"></pre>
+      </div>
+
+      <div class="card">
+        <h2>Сырые данные (JSON)</h2>
+        <p class="hint">Для отчёта: те же сущности в привычном виде. Структуры — в блоке выше.</p>
+        <pre id="combinedOutput"></pre>
+      </div>
+    </section>
+
+    <div class="actions">
+      <button type="button" id="refreshAllBtn">Обновить всё</button>
+      <button type="button" id="loadDemoBtn">Загрузить тестовые данные</button>
+      <button type="button" id="resetBtn">Очистить все данные</button>
+    </div>
+  </main>
+  <script type="module" src="/app.js"></script>
 </body>
 </html>

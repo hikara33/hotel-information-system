@@ -1,3 +1,5 @@
+import { containsByBoyerMoore } from "../algorithms/boyer-moore.js";
+
 export class AVLNode<T> {
   value: T;
   left: AVLNode<T> | null = null;
@@ -8,6 +10,14 @@ export class AVLNode<T> {
     this.value = value;
   }
 }
+
+export type AvlNestedNode = {
+  key: string;
+  height: number;
+  balance: number;
+  left: AvlNestedNode | null;
+  right: AvlNestedNode | null;
+};
 
 export class AVLTree<T extends { roomNumber: string, equipment: string }> {
   private root: AVLNode<T> | null = null;
@@ -190,7 +200,7 @@ export class AVLTree<T extends { roomNumber: string, equipment: string }> {
   private searchByEquipment(node: AVLNode<T> | null, fragment: string, result: T[]): void {
     if (!node) return;
 
-    if (node.value.equipment.toLowerCase().includes(fragment)) {
+    if (containsByBoyerMoore(node.value.equipment, fragment)) {
       result.push(node.value);
     }
 
@@ -199,6 +209,47 @@ export class AVLTree<T extends { roomNumber: string, equipment: string }> {
   }
 
   public getAll(): T[] {
-    return this.preOrder();
+    const result: T[] = [];
+    this.preOrderTraversal(this.root, result);
+    return result;
+  }
+
+  public toNestedGraph(): AvlNestedNode | null {
+    return this.buildNested(this.root);
+  }
+
+  private buildNested(node: AVLNode<T> | null): AvlNestedNode | null {
+    if (!node) return null;
+    return {
+      key: node.value.roomNumber,
+      height: node.height,
+      balance: this.getBalance(node),
+      left: this.buildNested(node.left),
+      right: this.buildNested(node.right)
+    };
+  }
+
+  public toLevelSnapshot(): Array<{ roomNumber: string; left: string | null; right: string | null; height: number }> {
+    const result: Array<{ roomNumber: string; left: string | null; right: string | null; height: number }> = [];
+    const queue: Array<AVLNode<T>> = [];
+
+    if (this.root) {
+      queue.push(this.root);
+    }
+
+    while (queue.length > 0) {
+      const node = queue.shift()!;
+      result.push({
+        roomNumber: node.value.roomNumber,
+        left: node.left ? node.left.value.roomNumber : null,
+        right: node.right ? node.right.value.roomNumber : null,
+        height: node.height
+      });
+
+      if (node.left) queue.push(node.left);
+      if (node.right) queue.push(node.right);
+    }
+
+    return result;
   }
 }
