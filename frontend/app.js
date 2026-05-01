@@ -1,7 +1,7 @@
-const guestsOutput = document.getElementById("guestsOutput");
-const roomsOutput = document.getElementById("roomsOutput");
-const checkInsOutput = document.getElementById("checkInsOutput");
-const combinedOutput = document.getElementById("combinedOutput");
+const guestsSearchTable = document.getElementById("guestsSearchTable");
+const roomsSearchTable = document.getElementById("roomsSearchTable");
+const passportSearchTable = document.getElementById("passportSearchTable");
+const roomNumberSearchTable = document.getElementById("roomNumberSearchTable");
 const allGuestsTable = document.getElementById("allGuestsTable");
 const allRoomsTable = document.getElementById("allRoomsTable");
 const allCheckInsTable = document.getElementById("allCheckInsTable");
@@ -108,7 +108,22 @@ document.getElementById("searchGuestBtn").addEventListener("click", async () => 
   }
   try {
     const guests = await get(`/api/guests/search?name=${encodeURIComponent(query)}`);
-    guestsOutput.textContent = JSON.stringify(guests, null, 2);
+    renderGuestsSearchTable(guests);
+  } catch {
+    /* handled */
+  }
+});
+
+document.getElementById("searchGuestByPassportBtn").addEventListener("click", async () => {
+  const input = document.getElementById("passportSearch");
+  const passport = normalizePassport(input.value);
+  if (!/^\d{4}-\d{6}$/.test(passport)) {
+    showToast("Паспорт: формат NNNN-NNNNNN", "error");
+    return;
+  }
+  try {
+    const guest = await get(`/api/guests/${encodeURIComponent(passport)}`);
+    renderPassportSearchResult(guest);
   } catch {
     /* handled */
   }
@@ -123,7 +138,22 @@ document.getElementById("searchRoomBtn").addEventListener("click", async () => {
   }
   try {
     const rooms = await get(`/api/rooms/search-equipment?fragment=${encodeURIComponent(fragment)}`);
-    roomsOutput.textContent = JSON.stringify(rooms, null, 2);
+    renderRoomsSearchTable(rooms);
+  } catch {
+    /* handled */
+  }
+});
+
+document.getElementById("searchRoomByNumberBtn").addEventListener("click", async () => {
+  const input = document.getElementById("roomNumberSearch");
+  const roomNumber = input.value.trim();
+  if (!/^[ЛПОМ]\d{3}$/.test(roomNumber)) {
+    showToast("Номер: буква Л/П/О/М и три цифры (например Л101)", "error");
+    return;
+  }
+  try {
+    const room = await get(`/api/rooms/${encodeURIComponent(roomNumber)}`);
+    renderRoomNumberSearchResult(room);
   } catch {
     /* handled */
   }
@@ -174,10 +204,10 @@ async function refreshAll() {
       get("/api/structures", { silent: true })
     ]);
 
-    guestsOutput.textContent = "(здесь появятся результаты поиска по ФИО)";
-    roomsOutput.textContent = "(здесь появятся результаты поиска по оборудованию)";
-    checkInsOutput.textContent = JSON.stringify(checkIns, null, 2);
-    combinedOutput.textContent = JSON.stringify({ guests, rooms, checkIns }, null, 2);
+    renderGuestsSearchTable([]);
+    renderRoomsSearchTable([]);
+    renderPassportSearchResult(null);
+    renderRoomNumberSearchResult(null);
 
     renderAllGuestsTable(guests);
     renderAllRoomsTable(rooms);
@@ -189,6 +219,172 @@ async function refreshAll() {
   } catch (e) {
     showToast(e.message || "Не удалось обновить данные", "error");
   }
+}
+
+function renderGuestsSearchTable(guests) {
+  if (!Array.isArray(guests) || guests.length === 0) {
+    guestsSearchTable.innerHTML = "<p class=\"hint\">Нет результатов.</p>";
+    return;
+  }
+  const table = document.createElement("table");
+  table.className = "data";
+  const thead = document.createElement("thead");
+  const hr = document.createElement("tr");
+  ["Паспорт", "ФИО", "Год рожд.", "Адрес", "Цель"].forEach((h) => {
+    const th = document.createElement("th");
+    th.textContent = h;
+    hr.appendChild(th);
+  });
+  thead.appendChild(hr);
+  table.appendChild(thead);
+  const tbody = document.createElement("tbody");
+  for (const g of guests) {
+    const tr = document.createElement("tr");
+    tr.appendChild(tdEl(g.passportNumber));
+    tr.appendChild(tdEl(g.fullName));
+    tr.appendChild(tdEl(String(g.birthYear)));
+    tr.appendChild(tdEl(g.address));
+    tr.appendChild(tdEl(g.purpose));
+    tbody.appendChild(tr);
+  }
+  table.appendChild(tbody);
+  guestsSearchTable.replaceChildren(table);
+}
+
+function renderRoomsSearchTable(rooms) {
+  if (!Array.isArray(rooms) || rooms.length === 0) {
+    roomsSearchTable.innerHTML = "<p class=\"hint\">Нет результатов.</p>";
+    return;
+  }
+  const table = document.createElement("table");
+  table.className = "data";
+  const thead = document.createElement("thead");
+  const hr = document.createElement("tr");
+  ["Номер", "Тип", "Мест", "Комнат", "Санузел", "Занято", "Оборудование"].forEach((h) => {
+    const th = document.createElement("th");
+    th.textContent = h;
+    hr.appendChild(th);
+  });
+  thead.appendChild(hr);
+  table.appendChild(thead);
+  const tbody = document.createElement("tbody");
+  for (const r of rooms) {
+    const tr = document.createElement("tr");
+    tr.appendChild(tdEl(r.roomNumber));
+    tr.appendChild(tdEl(r.type));
+    tr.appendChild(tdEl(String(r.capacity)));
+    tr.appendChild(tdEl(String(r.roomsCount)));
+    tr.appendChild(tdEl(r.hasBathroom ? "да" : "нет"));
+    tr.appendChild(tdEl(`${r.occupied}/${r.capacity}`));
+    tr.appendChild(tdEl(r.equipment));
+    tbody.appendChild(tr);
+  }
+  table.appendChild(tbody);
+  roomsSearchTable.replaceChildren(table);
+}
+
+function renderPassportSearchResult(guest) {
+  if (!guest) {
+    passportSearchTable.innerHTML = "<p class=\"hint\">Нет результата.</p>";
+    return;
+  }
+  const table = document.createElement("table");
+  table.className = "data";
+  const thead = document.createElement("thead");
+  const hr = document.createElement("tr");
+  ["Паспорт", "ФИО", "Год рожд.", "Адрес", "Цель", "Проживает в номере"].forEach((h) => {
+    const th = document.createElement("th");
+    th.textContent = h;
+    hr.appendChild(th);
+  });
+  thead.appendChild(hr);
+  table.appendChild(thead);
+  const tbody = document.createElement("tbody");
+  const tr = document.createElement("tr");
+  tr.appendChild(tdEl(guest.passportNumber));
+  tr.appendChild(tdEl(guest.fullName));
+  tr.appendChild(tdEl(String(guest.birthYear)));
+  tr.appendChild(tdEl(guest.address));
+  tr.appendChild(tdEl(guest.purpose));
+  tr.appendChild(tdEl(guest.roomNumber ?? "—"));
+  tbody.appendChild(tr);
+  table.appendChild(tbody);
+  passportSearchTable.replaceChildren(table);
+}
+
+function renderRoomNumberSearchResult(payload) {
+  if (!payload) {
+    roomNumberSearchTable.innerHTML = "<p class=\"hint\">Нет результата.</p>";
+    return;
+  }
+  const wrap = document.createElement("div");
+
+  const room = payload.room ?? payload;
+  const residents = payload.residents ?? [];
+
+  const roomTitle = document.createElement("p");
+  roomTitle.className = "hint";
+  roomTitle.textContent = "Сведения о номере";
+  wrap.appendChild(roomTitle);
+
+  const table = document.createElement("table");
+  table.className = "data";
+  const thead = document.createElement("thead");
+  const hr = document.createElement("tr");
+  ["Номер", "Тип", "Мест", "Комнат", "Санузел", "Занято", "Оборудование"].forEach((h) => {
+    const th = document.createElement("th");
+    th.textContent = h;
+    hr.appendChild(th);
+  });
+  thead.appendChild(hr);
+  table.appendChild(thead);
+  const tbody = document.createElement("tbody");
+  const tr = document.createElement("tr");
+  tr.appendChild(tdEl(room.roomNumber));
+  tr.appendChild(tdEl(room.type));
+  tr.appendChild(tdEl(String(room.capacity)));
+  tr.appendChild(tdEl(String(room.roomsCount)));
+  tr.appendChild(tdEl(room.hasBathroom ? "да" : "нет"));
+  tr.appendChild(tdEl(`${room.occupied}/${room.capacity}`));
+  tr.appendChild(tdEl(room.equipment));
+  tbody.appendChild(tr);
+  table.appendChild(tbody);
+  wrap.appendChild(table);
+
+  const resTitle = document.createElement("p");
+  resTitle.className = "hint";
+  resTitle.textContent = "Проживающие";
+  wrap.appendChild(resTitle);
+
+  if (!Array.isArray(residents) || residents.length === 0) {
+    const p = document.createElement("p");
+    p.className = "hint";
+    p.textContent = "В номере никто не проживает.";
+    wrap.appendChild(p);
+  } else {
+    const rt = document.createElement("table");
+    rt.className = "data";
+    const rthead = document.createElement("thead");
+    const rhr = document.createElement("tr");
+    ["ФИО", "Паспорт"].forEach((h) => {
+      const th = document.createElement("th");
+      th.textContent = h;
+      rhr.appendChild(th);
+    });
+    rthead.appendChild(rhr);
+    rt.appendChild(rthead);
+    const rtbody = document.createElement("tbody");
+    for (const g of residents) {
+      const rtr = document.createElement("tr");
+      rtr.appendChild(tdEl(g.fullName));
+      rtr.appendChild(tdEl(g.passportNumber));
+      rtbody.appendChild(rtr);
+    }
+    rt.appendChild(rtbody);
+    wrap.appendChild(rt);
+  }
+
+  roomNumberSearchTable.replaceChildren(wrap);
 }
 
 function renderAllGuestsTable(guests) {

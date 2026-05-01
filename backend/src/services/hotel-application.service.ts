@@ -97,6 +97,29 @@ export class HotelApplicationService {
     return this.rooms.findByEquipment(fragment).map(toRoomDto);
   }
 
+  public getRoomWithResidents(roomNumber: string): {
+    room: RoomDto;
+    residents: Array<{ fullName: string; passportNumber: string }>;
+  } | null {
+    const room = this.rooms.findRoom(roomNumber);
+    if (!room) {
+      return null;
+    }
+
+    const residents = room.guests
+      .map((passportNumber) => {
+        const guest = this.guests.findByPassport(passportNumber);
+        if (!guest) return null;
+        return { fullName: guest.getFullName(), passportNumber: guest.passportNumber };
+      })
+      .filter((x): x is { fullName: string; passportNumber: string } => x !== null);
+
+    return {
+      room: toRoomDto(room),
+      residents
+    };
+  }
+
   public deleteRoom(roomNumber: string): void {
     if (this.stays.hasActiveStayByRoom(roomNumber)) {
       throw new BusinessRuleError("Нельзя удалить: в номере есть проживающие", 409);

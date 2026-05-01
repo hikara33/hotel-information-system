@@ -12,13 +12,14 @@ export class HashTable<T extends { passportNumber: string }> {
 
   public homeIndex(passportNumber: string): number {
     const digits = passportNumber.replace(/\D/g, "");
-    let sum = 0;
+    let hash = 0;
+    const base = 31;
 
     for (let i = 0; i < digits.length; i++) {
-      sum += digits.charCodeAt(i);
+      hash = hash * base + Number(digits[i]);
     }
 
-    return sum % this.size;
+    return hash % this.size;
   }
 
   private loadFactor(): number {
@@ -26,13 +27,29 @@ export class HashTable<T extends { passportNumber: string }> {
   }
 
   private getChain(index: number): Bucket<T> {
-    return this.table[index] ?? [];
+    return this.table[index]!;
+  }
+
+  private getNextPrime(n: number): number {
+    const isPrime = (num: number): boolean => {
+      if (num < 2) return false;
+      for (let i = 2; i * i <= num; i++) {
+        if (num % i === 0) return false;
+      }
+      return true;
+    };
+
+    while (!isPrime(n)) {
+      n++;
+    }
+
+    return n;
   }
 
   private resize(): void {
     const oldTable = this.table;
 
-    this.size *= 2;
+    this.size = this.getNextPrime(this.size * 2);
     this.table = new Array(this.size).fill(null).map(() => []);
 
     this.count = 0;

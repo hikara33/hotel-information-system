@@ -69,8 +69,14 @@
           <input id="guestNameSearch" placeholder="Фрагмент ФИО (Бойер–Мур)" minlength="1" maxlength="120">
           <button type="button" id="searchGuestBtn">Найти</button>
         </div>
+        <div class="actions">
+          <input id="passportSearch" placeholder="Паспорт NNNN-NNNNNN" minlength="11" maxlength="11" pattern="[0-9]{4}-[0-9]{6}" title="Формат NNNN-NNNNNN">
+          <button type="button" id="searchGuestByPassportBtn">Найти по паспорту</button>
+        </div>
         <p class="hint subtle">Ниже — только результат поиска по ФИО.</p>
-        <pre id="guestsOutput"></pre>
+        <div id="guestsSearchTable" class="table-wrap data-table-wrap"></div>
+        <p class="hint subtle">Ниже — результат поиска по паспорту (гость + номер комнаты проживания).</p>
+        <div id="passportSearchTable" class="table-wrap data-table-wrap"></div>
       </div>
 
       <div class="card">
@@ -87,8 +93,14 @@
           <input id="equipmentSearch" placeholder="Фрагмент оборудования" minlength="1" maxlength="200">
           <button type="button" id="searchRoomBtn">Найти</button>
         </div>
+        <div class="actions">
+          <input id="roomNumberSearch" placeholder="Номер ANNN (например Л101)" minlength="4" maxlength="4" pattern="[ЛПОМ]\\d{3}" title="Буква Л/П/О/М и три цифры">
+          <button type="button" id="searchRoomByNumberBtn">Найти по номеру</button>
+        </div>
         <p class="hint subtle">Ниже — только результат поиска по оборудованию.</p>
-        <pre id="roomsOutput"></pre>
+        <div id="roomsSearchTable" class="table-wrap data-table-wrap"></div>
+        <p class="hint subtle">Ниже — результат поиска по номеру комнаты (с проживающими).</p>
+        <div id="roomNumberSearchTable" class="table-wrap data-table-wrap"></div>
       </div>
     </section>
 
@@ -106,13 +118,7 @@
           <input name="checkOutDate" type="date" required>
           <button type="submit">Выселить</button>
         </form>
-        <pre id="checkInsOutput"></pre>
-      </div>
-
-      <div class="card">
-        <h2>Сырые данные (JSON)</h2>
-        <p class="hint">Для отчёта: те же сущности в привычном виде. Структуры — в блоке выше.</p>
-        <pre id="combinedOutput"></pre>
+        <p class="hint subtle">Список всех заселений/выселений — в таблице выше.</p>
       </div>
     </section>
 

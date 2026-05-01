@@ -100,6 +100,17 @@ export async function dispatchHotelRequest(
       return;
     }
 
+    if (url.pathname.startsWith("/api/rooms/") && method === "GET") {
+      const roomNumber = assertRoomNumber(decodeURIComponent(url.pathname.replace("/api/rooms/", "")));
+      const data = app.getRoomWithResidents(roomNumber);
+      if (!data) {
+        sendJson(res, 404, { error: "Комната не найдена" });
+        return;
+      }
+      sendJson(res, 200, data);
+      return;
+    }
+
     if (url.pathname.startsWith("/api/rooms/") && method === "DELETE") {
       const roomNumber = assertRoomNumber(decodeURIComponent(url.pathname.replace("/api/rooms/", "")));
       app.deleteRoom(roomNumber);
